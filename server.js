@@ -12,21 +12,97 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 
-// ✅ Secure all requests with Helmet security headers (best practices)
+// ============================================
+// 🔒 SECURITY HEADERS - PROFESSIONAL CONFIGURATION
+// ============================================
 app.use(helmet({
+  // Content Security Policy - Prevents XSS attacks
   contentSecurityPolicy: {
-    useDefaults: true,
     directives: {
-      "default-src": ["'self'"],
-      "script-src": ["'self'"]
-    }
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com", "https://www.google-analytics.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https://www.google-analytics.com"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: process.env.NODE_ENV === "production" ? [] : null,
+    },
   },
-  referrerPolicy: { policy: "no-referrer-when-downgrade" },
-  frameguard: { action: "deny" },
-  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+
+  // HTTP Strict Transport Security - Forces HTTPS
+  strictTransportSecurity: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true,
+  },
+
+  // Referrer Policy - Controls referrer information
+  referrerPolicy: {
+    policy: "strict-origin-when-cross-origin",
+  },
+
+  // X-Frame-Options - Prevents clickjacking
+  frameguard: {
+    action: "deny",
+  },
+
+  // X-Content-Type-Options - Prevents MIME sniffing
   noSniff: true,
-  xssFilter: true
+
+  // X-DNS-Prefetch-Control - Controls DNS prefetching
+  dnsPrefetchControl: {
+    allow: false,
+  },
+
+  // X-Download-Options - Prevents IE from executing downloads
+  ieNoOpen: true,
+
+  // X-Permitted-Cross-Domain-Policies - Restricts Adobe Flash/PDF
+  permittedCrossDomainPolicies: {
+    permittedPolicies: "none",
+  },
+
+  // Hide X-Powered-By header
+  hidePoweredBy: true,
+
+  // Expect-CT - Certificate Transparency
+  expectCt: {
+    maxAge: 86400, // 24 hours
+    enforce: true,
+  },
+
+  // Cross-Origin-Embedder-Policy
+  crossOriginEmbedderPolicy: false, // Set to true if needed
+
+  // Cross-Origin-Opener-Policy
+  crossOriginOpenerPolicy: {
+    policy: "same-origin",
+  },
+
+  // Cross-Origin-Resource-Policy
+  crossOriginResourcePolicy: {
+    policy: "same-origin",
+  },
+
+  // Origin-Agent-Cluster
+  originAgentCluster: true,
 }));
+
+// Additional Security Headers (Manual)
+app.use((req, res, next) => {
+  // Remove fingerprinting headers
+  res.removeHeader("X-Powered-By");
+  
+  // Permissions Policy (formerly Feature Policy)
+  res.setHeader(
+    "Permissions-Policy",
+    "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+  );
+  
+  next();
+});
 
 const PORT = process.env.PORT || 3009;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/TournamentApp";
