@@ -40,14 +40,12 @@ export const setAuthCookie = (res, token) => {
 
   res.cookie("authToken", token, cookieOptions);
 };
-
 /**
  * Clear authentication cookie
  */
 export const clearAuthCookie = (res) => {
   res.clearCookie("authToken", baseCookieOptions);
 };
-
 /**
  * Set anonymous user cookie (used before login / for analytics)
  * Only stores a random UUID, no personal data.
@@ -80,9 +78,7 @@ export const setConsentCookie = (res, consent = { essential: true, analytics: fa
   });
 };
 
-/**
- * Clear all cookies (for logout or revoke consent)
- */
+//  Clear all cookies (for logout or revoke consent)
 export const clearAllCookies = (res) => {
   ["authToken", "anonId", "userConsent"].forEach((cookie) =>
     res.clearCookie(cookie, baseCookieOptions)
