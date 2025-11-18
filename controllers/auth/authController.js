@@ -52,9 +52,6 @@ export const signUp = async (req, res) => {
 export const signIn = async (req, res) => {
   try {
     const { email, password } = req.body;
-console.log(req.body);
-
-    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
@@ -76,7 +73,7 @@ console.log(req.body);
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
-
+    
     const refreshToken = jwt.sign(
       { id: user._id },
       process.env.JWT_REFRESH_SECRET,
