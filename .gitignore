@@ -1,4 +1,6 @@
 .env
+cypress.config.js
 # Ignore everything inside logs folder
 logs/*
 node_modules/*
+cypress/*
