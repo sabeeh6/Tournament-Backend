@@ -14,7 +14,6 @@ const Schema = new mongoose.Schema(
     },
     description: {
       type: String,
-      default: "",
     },
     startDate: {
       type: String,

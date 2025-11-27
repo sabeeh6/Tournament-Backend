@@ -7,11 +7,9 @@ export const createConsent = async (req, res) => {
   try {
     const { userId, consentType, isAccepted, source } = req.body;
 
-    // 1️⃣ Handle anonymousId
-    let anonymousId = req.cookies?.anonId; // use 'anonId' to match cookie utils
+    let anonymousId = req.cookies?.anonId;
     
     if (!userId && !anonymousId) {
-      // Generate and set anonymous cookie
       anonymousId = setAnonymousCookie(res)
     }
 

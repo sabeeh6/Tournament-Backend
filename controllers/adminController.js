@@ -1,5 +1,5 @@
 import { success } from "zod";
-import { User } from "../../model/user";
+import { User } from "../model/user";
 
 export const getCompanies = async(req , res)=>{
     try {
@@ -78,4 +78,3 @@ export const activateCompany = async (req, res) => {
     });
   }
 };
-
