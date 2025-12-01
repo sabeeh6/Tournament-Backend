@@ -1,28 +1,36 @@
 import jwt from "jsonwebtoken";
-// import { verifyToken } from "../controllers/auth/authService.js";
 import { User } from "../model/user.js";
+import dotenv from "dotenv"
+dotenv.config()
 
 export const authenticateUser = async (req, res, next) => {
   try {
-    const token = req.cookies?.authToken;
+    
+    const token = req.cookies?.accessToken;
+    // console.log(token);
+    
     
     if (!token){
         return res.status(401).json({ success: false, message: "Access denied. No token provided." });
     }
     
-    // console.log("env" , process.env.JWT_PEIVATE_KEY_321);
-    const decoded = jwt.verify(token, process.env.JWT_PEIVATE_KEY_321);
+    // console.log("env" , process.env.JWT_SECRET);
+    console.log("Here1" );
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select("-password");
-
+    console.log("Here2" );
+    
     if (!user) return res.status(401).json({ success: false, message: "Access denied. User not found." });
     if (["banned", "inactive"].includes(user.status))
       return res.status(403).json({ success: false, message: "Access denied. Account is inactive." });
+    console.log("Here3" );
 
     req.user = user;
     next();
+    console.log("Here4");    
   } catch (err) {
     console.error("Authentication error:", err.message);
-    res.clearCookie("authToken"); // token clear
+    res.clearCookie("accessToken"); // token clear
     return res.status(401).json({ success: false, message: "Access denied. Invalid or expired token." });
   }
 };

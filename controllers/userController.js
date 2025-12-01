@@ -1,4 +1,4 @@
-// import logger from "../config/logger.js";
+import logger from "../config/logger.js";
 import { User } from "../model/user.js";
 import bcrypt from "bcryptjs";
 
@@ -89,7 +89,7 @@ export const getUserById = async (req, res) => {
       data: { user },
     });
   } catch (error) {
-    logger.error("Failed to fetch user", {
+    console.error("Failed to fetch user", {
       error: error.message,
       userId: req.params.id,
     });
@@ -328,10 +328,10 @@ export const getUsersByRole = async (req, res) => {
   try {
     const { role } = req.params;
 
-    if (!["user", "company", "admin"].includes(role)) {
+    if (!["user", "organizor", "admin"].includes(role)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid role. Must be user, company, or admin",
+        message: "Invalid role. Must be user, organizor, or admin",
       });
     }
 

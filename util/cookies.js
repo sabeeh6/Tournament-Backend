@@ -29,9 +29,7 @@ const baseCookieOptions = {
   path: "/",
 };
 
-/**
- * Set authentication cookie (JWT / session token)
- */
+//   Set authentication cookie (JWT / session token)
 export const setAuthCookie = (res, token) => {
   const cookieOptions = {
     ...baseCookieOptions,
@@ -40,9 +38,7 @@ export const setAuthCookie = (res, token) => {
 
   res.cookie("authToken", token, cookieOptions);
 };
-/**
- * Clear authentication cookie
- */
+//  Clear authentication cookie
 export const clearAuthCookie = (res) => {
   res.clearCookie("authToken", baseCookieOptions);
 };
@@ -61,10 +57,9 @@ export const setAnonymousCookie = (res, existingAnonId) => {
   return anonId;
 };
 
-/**
- * Set user consent cookie
- * Stores whether the user accepted cookies or not
- */
+
+//  Set user consent cookie
+//  Stores whether the user accepted cookies or not
 export const setConsentCookie = (res, consent = { essential: true, analytics: false }) => {
   const cookieOptions = {
     ...baseCookieOptions,

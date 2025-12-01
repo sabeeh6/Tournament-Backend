@@ -9,13 +9,17 @@ const userSchema = new mongoose.Schema({
     },
     role:{
         type:String,
-        enum:["user" , "company" , "admin"],
+        enum:["user" , "organizor" , "admin"],
         default:"user"
     },
     password:{
         type:String
     },
     streetAddress:{
+        type:String,
+        trim: true,
+    },
+    address:{
         type:String,
         trim: true,
     },
@@ -28,6 +32,9 @@ const userSchema = new mongoose.Schema({
         min: [10000, "Invalid zipcode"],
         max: [999999, "Invalid zipcode"],
     },
+    number:{
+        type:Number
+    }
 },{
     timestamps:true,
 })
