@@ -7,7 +7,7 @@ export const authenticateUser = async (req, res, next) => {
   try {
     
     const token = req.cookies?.accessToken;
-    // console.log(token);
+    console.log(token);
     
     
     if (!token){
@@ -15,19 +15,15 @@ export const authenticateUser = async (req, res, next) => {
     }
     
     // console.log("env" , process.env.JWT_SECRET);
-    console.log("Here1" );
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select("-password");
-    console.log("Here2" );
     
     if (!user) return res.status(401).json({ success: false, message: "Access denied. User not found." });
     if (["banned", "inactive"].includes(user.status))
       return res.status(403).json({ success: false, message: "Access denied. Account is inactive." });
-    console.log("Here3" );
 
     req.user = user;
     next();
-    console.log("Here4");    
   } catch (err) {
     console.error("Authentication error:", err.message);
     res.clearCookie("accessToken"); // token clear

@@ -37,5 +37,16 @@ const userSchema = new mongoose.Schema({
     }
 },{
     timestamps:true,
+    discriminatorKey: '_t'
 })
+
 export const User = mongoose.model("user" , userSchema) 
+
+const organizorSchema = new mongoose.Schema({
+     status: {
+        type: String,
+        enum: ["active", "inactive"],
+        default: "inactive",
+    },
+});
+export const Organizor = User.discriminator("organizor", organizorSchema);

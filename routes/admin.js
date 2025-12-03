@@ -10,7 +10,7 @@ const adminRouter = express.Router();
 // Get all users (with pagination, filtering, sorting)
 // Query params: ?page=1&limit=10&role=user&search=john&sortBy=createdAt&order=desc
 // adminRouter.get("/", authenticateUser, authorizeRoles("admin"), getAllUsers);
-adminRouter.get("/:id", authenticateUser, getUserById);
+// adminRouter.get("/:id", authenticateUser, getUserById);
 
 // Search users
 // Query params: ?query=john

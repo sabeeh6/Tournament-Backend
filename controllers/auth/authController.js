@@ -1,56 +1,88 @@
-import { User } from "../../model/user.js";
+import { User , Organizor } from "../../model/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export const signUp = async (req, res) => {
   try {
-    const { name, email, password, role, streetAddress, state, zipcode } =
-      req.body;
+    const { 
+      name, 
+      email, 
+      password, 
+      streetAddress, 
+      address, 
+      state, 
+      zipcode, 
+      number, 
+      role,
+      status
+    } = req.body;
 
-    // logger.info("Creating new user", { email, role });
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-    //   logger.warn("User creation failed: Email already exists", { email });
-      return res.status(400).json({
+      return res.status(400).json({ 
         success: false,
-        message: "Email already registered",
+        message: "User with this email already exists" 
       });
     }
-    const hashedPassword = await bcrypt.hash(password, 12);
 
-    const user = new User({
-      name,
-      email,
-      password: hashedPassword,
-      role: role || "user",
-      streetAddress,
-      state,
-      zipcode,
-    });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    let newUser;
+    if (role === "organizor") {
+      newUser = new Organizor({
+        name,
+        email,
+        password: hashedPassword,
+        role: "organizor",
+        streetAddress,
+        address,
+        state,
+        zipcode,
+        number,
+        status: status || "inactive", 
+      });
+    } 
+    // Otherwise, use regular User model
+    else {
+      newUser = new User({
+        name,
+        email,
+        password: hashedPassword,
+        role: role || "user", // Default: user
+        streetAddress,
+        address,
+        state,
+        zipcode,
+        number,
+      });
+    }
+console.log("USer" , newUser);
 
-    await user.save();
+    await newUser.save();
 
-    // logger.info("User created successfully", { userId: user._id, email });
-
-    const userResponse = user.toObject();
+    // Remove password from response
+    const userResponse = newUser.toObject();
     delete userResponse.password;
 
     return res.status(201).json({
       success: true,
-      message: "User created successfully",
-      data: { user: userResponse },
+      message: `${role === "organizor" ? "Organizor" : "User"} registered successfully`,
+      data: userResponse,
     });
   } catch (error) {
-    return res.status(500).json({
+    console.error("Registration error:", error);
+    return res.status(500).json({ 
       success: false,
-      message: "Failed to create user",
-      error: error.message,
+      message: "Registration failed", 
+      error: error.message 
     });
   }
 };
 
+
 export const signIn = async (req, res) => {
   try {
+    console.log("Start");
+    
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
@@ -59,6 +91,19 @@ export const signIn = async (req, res) => {
         message: "Invalid email or password",
       });
     }
+       let loggedUser = user;
+    if (user.role === "organizor") {
+      loggedUser = await Organizor.findById(user._id);
+    }
+
+    // STEP 3: Check inactive status
+    if (loggedUser.role === "organizor" && loggedUser.status === "inactive") {
+      return res.status(403).json({
+        success: false,
+        message: "Your account is inactive. Contact admin."
+      });
+    }
+
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
@@ -98,6 +143,7 @@ export const signIn = async (req, res) => {
     // Remove password from response
     const userResponse = user.toObject();
     delete userResponse.password;
+console.log(userResponse);
 
     return res.status(200).json({
       success: true,
