@@ -2,7 +2,7 @@ import express from "express";
 import {  getAllUsers,  getUserById,  createUser,  updateUser,  deleteUser,  bulkDeleteUsers,  getUsersByRole,  searchUsers,  getUserStats } from "../controllers/userController.js";
 import { authenticateUser, authorizeRoles } from "../middlewares/authMiddleware.js";
 import { signUpValidationRequest } from "../middlewares/validation/index.js";
-import { createOrganizor, getOrganizor, updateOrganizor } from "../controllers/adminController.js";
+import { activateOrganizor, createOrganizor, getOrganizor, inactivateOrganizor, updateOrganizor } from "../controllers/adminController.js";
 
 const adminRouter = express.Router();
 
@@ -25,6 +25,8 @@ adminRouter.post("/create-user", authenticateUser, authorizeRoles("admin"), sign
 adminRouter.post("/add-organizor", authenticateUser, authorizeRoles("admin"), createOrganizor);
 adminRouter.post("/update-organizor/:id",authenticateUser , authorizeRoles("admin") , updateOrganizor);
 adminRouter.get("/get-all-organizor", authenticateUser , authorizeRoles("admin"), getOrganizor);
+adminRouter.put("/activate-organizor", authenticateUser , authorizeRoles("admin"), activateOrganizor);
+adminRouter.put("/inactivate-organizor", authenticateUser , authorizeRoles("admin"), inactivateOrganizor);
 
 // Update user
 adminRouter.patch("/:id", authenticateUser,

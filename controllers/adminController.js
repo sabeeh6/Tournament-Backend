@@ -1,4 +1,3 @@
-import { success } from "zod";
 import { User } from "../model/user.js";
 import bcrypt from "bcrypt";
 
