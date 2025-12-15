@@ -1,9 +1,7 @@
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
-import path from "path";
-import { fileURLToPath } from "url";
 
-// ✅ Custom console format (for terminal with colors)
+// ✅ Console format (for terminal with colors)
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
@@ -16,7 +14,6 @@ const consoleFormat = winston.format.combine(
     
     msg += `: ${message}`;
     
-    // Add metadata if present
     const metaKeys = Object.keys(meta).filter(key => 
       !['timestamp', 'level', 'message', 'caller'].includes(key)
     );
@@ -26,8 +23,9 @@ const consoleFormat = winston.format.combine(
     
     return msg;
   })
-)
-// ✅ File log format (detailed with full path)
+);
+
+// ✅ File log format
 const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
   winston.format.printf(({ timestamp, level, message, caller, ...meta }) => {
@@ -39,7 +37,6 @@ const fileFormat = winston.format.combine(
     
     msg += `: ${message}`;
     
-    // Add metadata if present
     const metaKeys = Object.keys(meta).filter(key => 
       !['timestamp', 'level', 'message', 'caller'].includes(key)
     );
@@ -49,55 +46,75 @@ const fileFormat = winston.format.combine(
     
     return msg;
   })
-)
-// ✅ Rotating log files
-const allLogs = new DailyRotateFile({
-  filename: "logs/app-%DATE%.log",
-  datePattern: "YYYY-MM-DD",
-  maxSize: "20m",
-  maxFiles: "14d",
-  format: fileFormat,
-})
-const errorLogs = new DailyRotateFile({
-  filename: "logs/error-%DATE%.log",
-  level: "error",
-  datePattern: "YYYY-MM-DD",
-  maxSize: "20m",
-  maxFiles: "30d",
-  format: fileFormat,
-})
-// ✅ Base Winston Logger instance
-const baseLogger = winston.createLogger({
-  level: process.env.LOG_LEVEL || "info",
-  transports: [allLogs, errorLogs],
-  exceptionHandlers: [
+);
+
+// ✅ Check if running on Vercel or serverless environment
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.FUNCTION_NAME;
+
+// ✅ Create transports array
+const transports = [];
+
+// ✅ Add file transports only in local/non-serverless environment
+if (!isServerless) {
+  transports.push(
     new DailyRotateFile({
-      filename: "logs/exceptions-%DATE%.log",
+      filename: "logs/app-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
+      maxSize: "20m",
+      maxFiles: "14d",
+      format: fileFormat,
+    }),
+    new DailyRotateFile({
+      filename: "logs/error-%DATE%.log",
+      level: "error",
       datePattern: "YYYY-MM-DD",
       maxSize: "20m",
       maxFiles: "30d",
       format: fileFormat,
-    }),
-  ],
-  rejectionHandlers: [
-    new DailyRotateFile({
-      filename: "logs/rejections-%DATE%.log",
-      datePattern: "YYYY-MM-DD",
-      maxSize: "20m",
-      maxFiles: "30d",
-      format: fileFormat,
-    }),
-  ],
-})
-// ✅ Console logs only in development
-if (process.env.NODE_ENV !== "production") {
-  baseLogger.add(
-    new winston.transports.Console({
-      format: consoleFormat,
     })
   );
 }
-// ✅ Function to get caller info BEFORE winston is called
+
+// ✅ Always add console transport (works everywhere)
+transports.push(
+  new winston.transports.Console({
+    format: process.env.NODE_ENV === "production" 
+      ? fileFormat  // Production: structured logs
+      : consoleFormat // Development: colored logs
+  })
+);
+
+// ✅ Base Winston Logger
+const baseLogger = winston.createLogger({
+  level: process.env.LOG_LEVEL || "info",
+  transports,
+  exceptionHandlers: isServerless 
+    ? [new winston.transports.Console({ format: fileFormat })]
+    : [
+        new DailyRotateFile({
+          filename: "logs/exceptions-%DATE%.log",
+          datePattern: "YYYY-MM-DD",
+          maxSize: "20m",
+          maxFiles: "30d",
+          format: fileFormat,
+        }),
+        new winston.transports.Console({ format: fileFormat })
+      ],
+  rejectionHandlers: isServerless
+    ? [new winston.transports.Console({ format: fileFormat })]
+    : [
+        new DailyRotateFile({
+          filename: "logs/rejections-%DATE%.log",
+          datePattern: "YYYY-MM-DD",
+          maxSize: "20m",
+          maxFiles: "30d",
+          format: fileFormat,
+        }),
+        new winston.transports.Console({ format: fileFormat })
+      ],
+});
+
+// ✅ Get caller info
 const getCallerInfo = () => {
   try {
     const stack = new Error().stack;
@@ -105,11 +122,9 @@ const getCallerInfo = () => {
 
     const lines = stack.split('\n');
     
-    // Look for the first line that contains actual file (not logger.js, not node_modules)
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       
-      // Skip internal stuff
       if (line.includes('logger.js') || 
           line.includes('node_modules') ||
           line.includes('node:internal') ||
@@ -117,40 +132,30 @@ const getCallerInfo = () => {
         continue;
       }
 
-      // Try to extract file info
-      // Pattern for file:/// URLs
       let match = line.match(/file:\/\/\/([^)]+):(\d+):(\d+)/);
       if (match) {
         let filePath = match[1];
         const lineNumber = match[2];
-        
-        // Decode URL encoding (%20 -> space)
         filePath = decodeURIComponent(filePath);
-        
-        // Get just filename
-        const fileName = path.basename(filePath);
-        
+        const fileName = filePath.split('/').pop();
         return `${fileName}:${lineNumber}`;
       }
       
-      // Pattern for Windows paths (D:\path\file.js:line:col)
       match = line.match(/\(([A-Z]:[^)]+):(\d+):(\d+)\)/);
       if (match) {
         const filePath = match[1];
         const lineNumber = match[2];
-        const fileName = path.basename(filePath);
-        
+        const fileName = filePath.split('\\').pop();
         return `${fileName}:${lineNumber}`;
       }
       
-      // Pattern for relative paths
       match = line.match(/at .+ \((.+):(\d+):(\d+)\)/);
       if (match) {
         const filePath = match[1];
         const lineNumber = match[2];
         
         if (!filePath.includes('node_modules')) {
-          const fileName = path.basename(filePath);
+          const fileName = filePath.split('/').pop();
           return `${fileName}:${lineNumber}`;
         }
       }
@@ -160,8 +165,9 @@ const getCallerInfo = () => {
   } catch (error) {
     return 'unknown:0';
   }
-}
-// ✅ Wrapper Logger - Ye caller info capture karega
+};
+
+// ✅ Wrapper Logger
 const logger = {
   info: (message, meta = {}) => {
     const caller = getCallerInfo();
@@ -192,5 +198,6 @@ const logger = {
     const caller = getCallerInfo();
     baseLogger.silly(message, { ...meta, caller });
   },
-}
+};
+
 export default logger;
