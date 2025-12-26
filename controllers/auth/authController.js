@@ -55,7 +55,6 @@ export const signUp = async (req, res) => {
         number,
       });
     }
-console.log("USer" , newUser);
 
     await newUser.save();
 
@@ -139,11 +138,12 @@ export const signIn = async (req, res) => {
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
-
+    
+    console.log("here");
     // Remove password from response
     const userResponse = user.toObject();
     delete userResponse.password;
-console.log(userResponse);
+console.log("UserResponse",userResponse);
 
     return res.status(200).json({
       success: true,

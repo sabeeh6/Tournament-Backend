@@ -100,10 +100,8 @@ export const updateOrganizor = async (req, res) => {
 };
 
 export const getOrganizor = async(req , res)=>{
-  // console.log('req',req)
     try {
         const organizor = await User.find({role : "organizor"});
-        console.log("organizor" , organizor);
         if (organizor.length === 0) {
             return res.status(404).json({
                 success:false,

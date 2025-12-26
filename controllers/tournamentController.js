@@ -56,7 +56,6 @@ export const createTournament = async (req, res) => {
     if (start < new Date()) {
       return sendError(res, 400, "Start date cannot be in the past");
     }
-    console.log("Incoming dates:", startDate, endDate);
 
     // Create tournament
     const tournament = await tournamentSchema.create({

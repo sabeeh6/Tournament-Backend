@@ -7,7 +7,7 @@ export const authenticateUser = async (req, res, next) => {
   try {
     
     const token = req.cookies?.accessToken;
-    console.log(token);
+    console.log("token" , token);
     
     
     if (!token){
