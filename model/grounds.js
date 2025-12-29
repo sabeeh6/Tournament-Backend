@@ -21,7 +21,7 @@ const groundSchema = new mongoose.Schema({
         enum:["Crikect" , "Football" , "Tennis" , "Basketball" , "Badminton"],
     },
     price:{
-        type:String
+        type:Number
     },
     location:{
         type:String
