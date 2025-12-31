@@ -1,7 +1,91 @@
 import { success } from "zod";
 import { Ground } from "../model/grounds.js";
+import { openAi } from "../config/openAi.js";
 
+export const createTournamentSchedule = async (req, res) => {
+  try {
+    const { teams, totalDays } = req.body;
 
+    if (!teams || teams.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: "At least 2 teams required"
+      });
+    }
+
+    const prompt = `
+Create a fair round-robin tournament schedule.
+
+Rules:
+- Teams: ${teams.join(", ")}
+- Total days: ${totalDays}
+- Matches per day: 1
+- A team must not play more than once per day
+- Return STRICT JSON only
+- make sure that all teams play equal matches.
+- No explanation, no markdown, no extra text
+-also remove the exta sentences , just give response only
+-give me proper data in good way 
+Output format:
+[
+  {
+    "match": "Team A vs Team B",
+    "day": "1",
+  }
+]
+`;
+
+    const response = await openAi.chat.completions.create({
+      model: "openai/gpt-5.2",
+      messages: [
+        { role: "system", content: "You are a tournament scheduling engine." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 600
+    });
+
+    const raw = response.choices[0].message.content;
+    //  const raw = JSON.parse(response.choices[0].message.content)
+
+console.log("raw" , raw);
+ const extractJsonArray = (text) => {
+  const firstBracket = text.indexOf("[");
+  const lastBracket = text.lastIndexOf("]");
+
+  if (firstBracket === -1 || lastBracket === -1) {
+    throw new Error("No JSON array found in AI response");
+  }
+
+  const jsonString = text.slice(firstBracket, lastBracket + 1);
+  return JSON.parse(jsonString);
+};
+    // let schedule;
+    // try {
+    //   schedule = JSON.parse(raw);
+    // } catch {
+    //   return res.status(500).json({
+    //     success: false,
+    //     message: "AI returned invalid JSON",
+    //     raw
+    //   });
+    // }
+    const schedule = extractJsonArray(raw);
+
+    return res.status(200).json({
+      success: true,
+      data: schedule
+    });
+
+  } catch (error) {
+    console.error("OpenRouter Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error?.error?.message || "AI scheduling failed"
+    });
+  }
+};
 export const createGround = async(req , res)=>{
     try {
         const {groundName , status , type , price , description , location  } = req.body
@@ -116,3 +200,5 @@ export const delGround = async(req,res) => {
         return res.status(500).json({success:false , message:"Internal server error"})
     }
 }
+
+
