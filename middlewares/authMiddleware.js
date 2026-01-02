@@ -6,7 +6,7 @@ dotenv.config()
 export const authenticateUser = async (req, res, next) => {
   try {
     
-    const token = req.cookies?.accessToken;
+    const token = req.cookies?.authToken;
     console.log("token" , token);
     
     
