@@ -1,45 +1,45 @@
 import { User } from "../model/user.js";
 import bcrypt from "bcrypt";
 
-export const createOrganizor = async(req,res) => {
-    try {
-      const {name , email , password ,  address , state , zip , number } = req.body
-      const userExist = await User.findOne({email});
-      if (userExist) {
-        return res.status(409).json({
-          success:false,
-          message:"Organizor already exist"
-        })
-      }
-      const hashPass= await bcrypt.hash(password , 10)
-      const role = "organizor"
-      const newOrganizor = {
-        name , email , password: hashPass , address , state , zip , number , role
-      }
-      await User.create(newOrganizor);
-
-      return res.status(201).json({
-        success:true , 
-        message:{
-            name:name,
-            email:email,
-            address:address,
-            state:state,
-            zip:zip,
-            number:number,
-            role:role
-            // image:image
-        }
-      })
-      
-
-    } catch (error) {
-      console.error("Error" , error);
-      return res.status(500).json({
-        success:false,
-        message:"Internal server error"
+export const createOrganizor = async (req, res) => {
+  try {
+    const { name, email, password, address, state, zip, number } = req.body
+    const userExist = await User.findOne({ email });
+    if (userExist) {
+      return res.status(409).json({
+        success: false,
+        message: "Organizor already exist"
       })
     }
+    const hashPass = await bcrypt.hash(password, 10)
+    const role = "organizor"
+    const newOrganizor = {
+      name, email, password: hashPass, address, state, zip, number, role
+    }
+    await User.create(newOrganizor);
+
+    return res.status(201).json({
+      success: true,
+      message: "Organizor created successfully",
+      data: {
+        name: name,
+        email: email,
+        address: address,
+        state: state,
+        zip: zip,
+        number: number,
+        role: role
+      }
+    });
+
+
+  } catch (error) {
+    console.error("Error", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    })
+  }
 }
 
 export const updateOrganizor = async (req, res) => {
@@ -81,7 +81,7 @@ export const updateOrganizor = async (req, res) => {
       id,
       { $set: updateData },
       { new: true, runValidators: true }
-    ).select('-password'); 
+    ).select('-password');
 
     return res.status(200).json({
       success: true,
@@ -99,26 +99,30 @@ export const updateOrganizor = async (req, res) => {
   }
 };
 
-export const getOrganizor = async(req , res)=>{
-    try {
-        const organizor = await User.find({role : "organizor"});
-        if (organizor.length === 0) {
-            return res.status(404).json({
-                success:false,
-                message:"Organizor not found"
-            })
-        }
-        
-return res.status(200).json({
-    success:true,
-    message:"Organizors get successfully",
-    data:organizor
-})
-        
-    } catch (error) {
-        console.error("Error" , error);
-        return res.status(500).json({message:"Internal server error"})
-    }
+export const getOrganizor = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const total = await User.countDocuments({ role: "organizor" });
+    const organizors = await User.find({ role: "organizor" })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Organizors fetched successfully",
+      data: organizors,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.error("Error", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
 }
 
 export const inactivateOrganizor = async (req, res) => {
@@ -132,7 +136,7 @@ export const inactivateOrganizor = async (req, res) => {
       });
     }
 
-    organizor.status = "inactive"; 
+    organizor.status = "inactive";
     await organizor.save();
 
     return res.status(200).json({
@@ -160,7 +164,7 @@ export const activateOrganizor = async (req, res) => {
       });
     }
 
-    organizor.status = "active"; 
+    organizor.status = "active";
     await organizor.save();
 
     return res.status(200).json({

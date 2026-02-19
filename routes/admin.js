@@ -1,5 +1,5 @@
 import express from "express";
-import {  getAllUsers,  getUserById,  createUser,  updateUser,  deleteUser,  bulkDeleteUsers,  getUsersByRole,  searchUsers,  getUserStats } from "../controllers/userController.js";
+import { getAllUsers, getUserById, createUser, updateUser, deleteUser, bulkDeleteUsers, getUsersByRole, searchUsers, getUserStats } from "../controllers/userController.js";
 import { authenticateUser, authorizeRoles } from "../middlewares/authMiddleware.js";
 import { signUpValidationRequest } from "../middlewares/validation/index.js";
 import { activateOrganizor, createOrganizor, getOrganizor, inactivateOrganizor, updateOrganizor } from "../controllers/adminController.js";
@@ -23,19 +23,19 @@ const adminRouter = express.Router();
 // Create new user
 adminRouter.post("/create-user", authenticateUser, authorizeRoles("admin"), signUpValidationRequest, createUser);
 adminRouter.post("/add-organizor", authenticateUser, authorizeRoles("admin"), createOrganizor);
-adminRouter.post("/update-organizor/:id",authenticateUser , authorizeRoles("admin") , updateOrganizor);
-adminRouter.get("/get-all-organizor", authenticateUser , authorizeRoles("admin"), getOrganizor);
-adminRouter.put("/activate-organizor", authenticateUser , authorizeRoles("admin"), activateOrganizor);
-adminRouter.put("/inactivate-organizor", authenticateUser , authorizeRoles("admin"), inactivateOrganizor);
+adminRouter.post("/update-organizor/:id", authenticateUser, authorizeRoles("admin"), updateOrganizor);
+adminRouter.get("/get-all-organizor", authenticateUser, authorizeRoles("admin"), getOrganizor);
+adminRouter.put("/activate-organizor/:id", authenticateUser, authorizeRoles("admin"), activateOrganizor);
+adminRouter.put("/inactivate-organizor/:id", authenticateUser, authorizeRoles("admin"), inactivateOrganizor);
 
 // Update user
 adminRouter.patch("/:id", authenticateUser,
-//   validate(updateUserSchema),
+  //   validate(updateUserSchema),
   updateUser
 );
 
 // Delete single user
 adminRouter.delete("/:id", authenticateUser, authorizeRoles("admin"), deleteUser);
-adminRouter.post( "/bulk/delete",  authenticateUser,  authorizeRoles("admin"),  bulkDeleteUsers);
+adminRouter.post("/bulk/delete", authenticateUser, authorizeRoles("admin"), bulkDeleteUsers);
 
 export default adminRouter;

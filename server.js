@@ -3,17 +3,46 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
-// import router from "./routes/tournamentRoutes.js";
 import cookieParser from "cookie-parser";
 import router from "./routes/index.js";
 
 dotenv.config();
 
 const app = express();
+
+// ============================================
+// 🔒 CORS CONFIGURATION - ALLOW CREDENTIALS
+// ============================================
+const isDevelopment = process.env.NODE_ENV !== "production";
+
+const allowedOrigins = [
+  "https://sportsarena-frontend-livid.vercel.app", // apna production domain yahan daalein
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true
+  origin: (origin, callback) => {
+    // Development: allow all localhost origins
+    if (isDevelopment && origin && origin.includes('localhost')) {
+      callback(null, true);
+    }
+    // Allow requests with no origin (mobile apps, curl requests, etc.)
+    else if (!origin) {
+      callback(null, true);
+    }
+    // Production: check against whitelist
+    else if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    }
+    else {
+      console.log('CORS Blocked Origin:', origin);
+      callback(null, false); // Silently reject instead of error
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -23,7 +52,6 @@ app.use(cookieParser());
 // 🔒 SECURITY HEADERS - PROFESSIONAL CONFIGURATION
 // ============================================
 app.use(helmet({
-  // Content Security Policy - Prevents XSS attacks
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -37,77 +65,44 @@ app.use(helmet({
       upgradeInsecureRequests: process.env.NODE_ENV === "production" ? [] : null,
     },
   },
-
-  // HTTP Strict Transport Security - Forces HTTPS
   strictTransportSecurity: {
-    maxAge: 31536000, // 1 year
+    maxAge: 31536000,
     includeSubDomains: true,
     preload: true,
   },
-
-  // Referrer Policy - Controls referrer information
   referrerPolicy: {
     policy: "strict-origin-when-cross-origin",
   },
-
-  // X-Frame-Options - Prevents clickjacking
   frameguard: {
     action: "deny",
   },
-
-  // X-Content-Type-Options - Prevents MIME sniffing
   noSniff: true,
-
-  // X-DNS-Prefetch-Control - Controls DNS prefetching
   dnsPrefetchControl: {
     allow: false,
   },
-
-  // X-Download-Options - Prevents IE from executing downloads
   ieNoOpen: true,
-
-  // X-Permitted-Cross-Domain-Policies - Restricts Adobe Flash/PDF
   permittedCrossDomainPolicies: {
     permittedPolicies: "none",
   },
-
-  // Hide X-Powered-By header
   hidePoweredBy: true,
-
-  // Expect-CT - Certificate Transparency
   expectCt: {
-    maxAge: 86400, // 24 hours
+    maxAge: 86400,
     enforce: true,
   },
-
-  // Cross-Origin-Embedder-Policy
-  crossOriginEmbedderPolicy: false, // Set to true if needed
-
-  // Cross-Origin-Opener-Policy
-  // crossOriginOpenerPolicy: {
-  //   policy: "same-origin",
-  // },
-
-  // Cross-Origin-Resource-Policy
+  crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: {
     policy: "same-origin",
   },
-
-  // Origin-Agent-Cluster
   originAgentCluster: true,
 }));
 
 // Additional Security Headers (Manual)
 app.use((req, res, next) => {
-  // Remove fingerprinting headers
   res.removeHeader("X-Powered-By");
-  
-  // Permissions Policy (formerly Feature Policy)
   res.setHeader(
     "Permissions-Policy",
     "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
   );
-  
   next();
 });
 
@@ -126,13 +121,13 @@ const connectDB = async () => {
 
 app.use("/api", router);
 
+app.get("/", (req, res) => res.send("Server is running"));
+
 const startServer = async () => {
   await connectDB();
   app.listen(PORT, () => console.log(`✅ Server running securely on port ${PORT}`));
 };
-app.get("/", (req, res) => res.send("Server is running"));
 
-
-startServer()
+startServer();
 
 export default app;

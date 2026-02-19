@@ -1,27 +1,27 @@
-import { User , Organizor } from "../../model/user.js";
+import { User, Organizor } from "../../model/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export const signUp = async (req, res) => {
   try {
-    const { 
-      name, 
-      email, 
-      password, 
-      streetAddress, 
-      address, 
-      state, 
-      zipcode, 
-      number, 
+    const {
+      name,
+      email,
+      password,
+      streetAddress,
+      address,
+      state,
+      zipcode,
+      number,
       role,
       status
     } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: "User with this email already exists" 
+        message: "User with this email already exists"
       });
     }
 
@@ -38,9 +38,9 @@ export const signUp = async (req, res) => {
         state,
         zipcode,
         number,
-        status: status || "inactive", 
+        status: status || "inactive",
       });
-    } 
+    }
     // Otherwise, use regular User model
     else {
       newUser = new User({
@@ -69,19 +69,18 @@ export const signUp = async (req, res) => {
     });
   } catch (error) {
     console.error("Registration error:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
-      message: "Registration failed", 
-      error: error.message 
+      message: "Registration failed",
+      error: error.message
     });
   }
 };
 
-
 export const signIn = async (req, res) => {
   try {
     console.log("Start");
-    
+
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
@@ -90,7 +89,7 @@ export const signIn = async (req, res) => {
         message: "Invalid email or password",
       });
     }
-       let loggedUser = user;
+    let loggedUser = user;
     if (user.role === "organizor") {
       loggedUser = await Organizor.findById(user._id);
     }
@@ -115,9 +114,9 @@ export const signIn = async (req, res) => {
     const accessToken = jwt.sign(
       { id: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "1d" }
     );
-    
+
     const refreshToken = jwt.sign(
       { id: user._id },
       process.env.JWT_REFRESH_SECRET,
@@ -128,22 +127,22 @@ export const signIn = async (req, res) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
-    
+
     console.log("here");
     // Remove password from response
     const userResponse = user.toObject();
     delete userResponse.password;
-console.log("UserResponse",userResponse);
+    console.log("UserResponse", userResponse);
 
     return res.status(200).json({
       success: true,
@@ -165,11 +164,11 @@ console.log("UserResponse",userResponse);
 };
 
 export const signOut = (req, res) => {
-    clearCookies(res);
-    console.log("Cookies clear");
-    
-    res.status(200).json({
-        success: true,
-        message: "Logged out successfully"
-    });
+  clearCookies(res);
+  console.log("Cookies clear");
+
+  res.status(200).json({
+    success: true,
+    message: "Logged out successfully"
+  });
 };

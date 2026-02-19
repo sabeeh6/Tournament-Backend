@@ -4,7 +4,7 @@ export const setCookies = (res, token) => {
     const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: "/"
     };
@@ -16,7 +16,7 @@ export const clearCookies = (res) => {
     res.clearCookie("authToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
         path: "/"
     });
 };
@@ -25,7 +25,7 @@ export const clearCookies = (res) => {
 const baseCookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
+  sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
   path: "/",
 };
 
