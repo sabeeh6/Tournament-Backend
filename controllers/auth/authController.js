@@ -1,6 +1,7 @@
 import { User, Organizor } from "../../model/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { clearCookies } from "../../util/cookies.js";
 
 export const signUp = async (req, res) => {
   try {
@@ -164,11 +165,22 @@ export const signIn = async (req, res) => {
 };
 
 export const signOut = (req, res) => {
-  clearCookies(res);
-  console.log("Cookies clear");
-
-  res.status(200).json({
-    success: true,
-    message: "Logged out successfully"
-  });
+  try {
+    // clearAllCookies(res);
+    clearCookies(res);
+    console.log("Cookies clear");
+  
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully"
+    });
+    
+  } catch (error) {
+    console.error("Error" , error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
 };

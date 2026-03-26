@@ -13,7 +13,7 @@ export const setCookies = (res, token) => {
 };
 
 export const clearCookies = (res) => {
-    res.clearCookie("authToken", {
+    res.clearCookie("accessToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
