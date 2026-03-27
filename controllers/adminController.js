@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 
 export const createOrganizor = async (req, res) => {
   try {
-    const { name, email, password, address, state, zip, number } = req.body
+    const { name, email, password, address, state, zipCode, number } = req.body
     const userExist = await User.findOne({ email });
     if (userExist) {
       return res.status(409).json({
@@ -14,9 +14,18 @@ export const createOrganizor = async (req, res) => {
     const hashPass = await bcrypt.hash(password, 10)
     const role = "organizor"
     const newOrganizor = {
-      name, email, password: hashPass, address, state, zip, number, role
+      name, email, password: hashPass, address, state, zipCode, number, role
     }
     await User.create(newOrganizor);
+    console.log("Organizor" ,  {data: {
+        name: name,
+        email: email,
+        address: address,
+        state: state,
+        zipCode: zipCode,
+        number: number,
+        role: role
+      }})
 
     return res.status(201).json({
       success: true,
@@ -26,7 +35,7 @@ export const createOrganizor = async (req, res) => {
         email: email,
         address: address,
         state: state,
-        zip: zip,
+        zipCode: zipCode,
         number: number,
         role: role
       }

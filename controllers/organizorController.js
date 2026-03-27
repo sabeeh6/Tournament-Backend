@@ -21,22 +21,28 @@ Rules:
 - Total days: ${totalDays}
 - Matches per day: 1
 - A team must not play more than once per day
+- Also mention that , each team played how many matches.
+-Make sure that the teams play equal number of matches. If the total number of matches is not perfectly divisible by the total days, leave the remaining days empty and also mention that in the response.
 - Return STRICT JSON only
 - make sure that all teams play equal matches.
 - No explanation, no markdown, no extra text
 -also remove the exta sentences , just give response only
 -give me proper data in good way 
+-All data should be in one array of objects.
 Output format:
 [
   {
     "match": "Team A vs Team B",
     "day": "1",
+  },
+  {
+  each team plays ... matches
   }
 ]
 `;
 
     const response = await openAi.chat.completions.create({
-      model: "openai/gpt-5.2",
+      model: "openai/gpt-5.4-mini",
       messages: [
         { role: "system", content: "You are a tournament scheduling engine." },
         { role: "user", content: prompt }
@@ -47,7 +53,9 @@ Output format:
 
     const raw = response.choices[0].message.content;
     //  const raw = JSON.parse(response.choices[0].message.content)
-
+if (!raw) {
+  throw new Error("AI returned empty content");
+}
 console.log("raw" , raw);
  const extractJsonArray = (text) => {
   const firstBracket = text.indexOf("[");
@@ -86,6 +94,7 @@ console.log("raw" , raw);
     });
   }
 };
+
 export const createGround = async(req , res)=>{
     try {
         const {groundName , status , type , price , description , location  } = req.body

@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema({
         type:String,
         trim: true,
     },
-    zipcode: {
+    zipCode: {
         type: Number,
         min: [10000, "Invalid zipcode"],
         max: [999999, "Invalid zipcode"],
