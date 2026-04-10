@@ -1,4 +1,4 @@
-import { User } from "../model/user.js";
+import { User, Organizor } from "../model/user.js";
 import bcrypt from "bcrypt";
 
 export const createOrganizor = async (req, res) => {
@@ -16,29 +16,12 @@ export const createOrganizor = async (req, res) => {
     const newOrganizor = {
       name, email, password: hashPass, address, state, zipCode, number, role
     }
-    await User.create(newOrganizor);
-    console.log("Organizor" ,  {data: {
-        name: name,
-        email: email,
-        address: address,
-        state: state,
-        zipCode: zipCode,
-        number: number,
-        role: role
-      }})
+    const createdOrganizor = await Organizor.create(newOrganizor);
 
     return res.status(201).json({
       success: true,
       message: "Organizor created successfully",
-      data: {
-        name: name,
-        email: email,
-        address: address,
-        state: state,
-        zipCode: zipCode,
-        number: number,
-        role: role
-      }
+      data: createdOrganizor
     });
 
 
@@ -115,10 +98,18 @@ export const getOrganizor = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const total = await User.countDocuments({ role: "organizor" });
-    const organizors = await User.find({ role: "organizor" })
+    const organizorsRaw = await User.find({ role: "organizor" })
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const organizors = organizorsRaw.map(org => {
+      if (!org.status) {
+        org.status = "inactive";
+      }
+      return org;
+    });
 
     return res.status(200).json({
       success: true,
@@ -145,7 +136,7 @@ export const inactivateOrganizor = async (req, res) => {
       });
     }
 
-    organizor.status = "inactive";
+     organizor.status = "inactive";
     await organizor.save();
 
     return res.status(200).json({

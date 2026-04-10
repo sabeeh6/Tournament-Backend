@@ -142,13 +142,14 @@ export const updateGround = async (req, res) => {
     }
 
     // ✅ Update only provided fields
-    const { groundName, status, type, price, description } = req.body;
+    const { groundName, status, type, price, description, location } = req.body;
 
     if (groundName !== undefined) ground.groundName = groundName;
     if (status !== undefined) ground.status = status;
     if (type !== undefined) ground.type = type;
     if (price !== undefined) ground.price = price;
     if (description !== undefined) ground.description = description;
+    if (location !== undefined) ground.location = location;
 
     await ground.save();
 
@@ -209,5 +210,30 @@ export const delGround = async(req,res) => {
         return res.status(500).json({success:false , message:"Internal server error"})
     }
 }
+
+export const getGroundById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ground = await Ground.findOne({ _id: id, groundOwner: req.user._id });
+
+    if (!ground) {
+      return res.status(404).json({
+        success: false,
+        message: "Ground not found or unauthorized",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: ground,
+    });
+  } catch (error) {
+    console.error("Get Ground Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
 
