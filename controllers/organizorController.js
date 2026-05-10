@@ -103,6 +103,12 @@ export const createGround = async(req , res)=>{
         if (!userId) {
             return res.status(404).json({success:false , message:"User Id not found"})
         }
+
+        let imageBase64 = null;
+        if (req.file) {
+            imageBase64 = "data:" + req.file.mimetype + ";base64," + req.file.buffer.toString("base64");
+        }
+
         const ground = new Ground({
             groundName,
             groundOwner:userId,
@@ -110,7 +116,8 @@ export const createGround = async(req , res)=>{
             type,
             price,
             description,
-            location
+            location,
+            images: imageBase64
         })
         await ground.save()
 
@@ -150,6 +157,10 @@ export const updateGround = async (req, res) => {
     if (price !== undefined) ground.price = price;
     if (description !== undefined) ground.description = description;
     if (location !== undefined) ground.location = location;
+
+    if (req.file) {
+        ground.images = "data:" + req.file.mimetype + ";base64," + req.file.buffer.toString("base64");
+    }
 
     await ground.save();
 
